@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seis piezas de SQL</title>
+<meta name="description" content="Qué hace cada pieza de SQL y para qué sirve de verdad, explicado en simple con un proyecto hecho sobre un archivo público de 41,188 filas.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Seis piezas de SQL, explicadas con un proyecto de verdad">
+<meta property="og:description" content="Qué hace cada pieza y para qué sirve de verdad, explicado en simple. De un archivo público de 41,188 filas al que le faltaba casi todo.">
+<meta property="og:url" content="https://klismann21.github.io/seis-piezas-de-sql/">
+<meta property="og:image" content="https://klismann21.github.io/seis-piezas-de-sql/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://klismann21.github.io/seis-piezas-de-sql/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#fbf8f3;
+  --paper-2:#f3ede3;
+  --ink:#1c1a16;
+  --ink-2:#4a453c;
+  --ink-3:#7c7568;
+  --rule:#ddd4c5;
+  --accent:#a8452a;
+  --code-bg:#f5eee4;
+  --box:#ffffff;
+  --box-head:#eee6d9;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#16150f;
+    --paper-2:#1e1c15;
+    --ink:#efe9dd;
+    --ink-2:#c2bbaa;
+    --ink-3:#8b8474;
+    --rule:#39352b;
+    --accent:#e0805f;
+    --code-bg:#1f1d16;
+    --box:#201e17;
+    --box-head:#2b281f;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Newsreader",Georgia,"Times New Roman",serif;
+  font-size:1.0625rem;
+  line-height:1.62;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:38rem;margin:0 auto;padding:0 1.35rem}
+p{margin:0 0 1.15em}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:3px}
+strong{font-weight:600}
+em{font-style:italic}
+code{
+  font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  font-size:.86em;
+  background:var(--code-bg);
+  padding:.08em .24em;
+  border-radius:3px;
+  color:var(--ink);
+}
+
+/* ---------- apertura ---------- */
+.hero{padding:4.6rem 0 1rem}
+h1{
+  font-size:clamp(2rem,8.6vw,2.85rem);
+  line-height:1.09;
+  font-weight:500;
+  letter-spacing:-.02em;
+  margin:0 0 1.5rem;
+}
+.hero p{color:var(--ink-2)}
+.hero .punch{color:var(--ink);font-size:1.17rem;line-height:1.48;margin-bottom:1.25rem}
+
+/* ---------- bloques ---------- */
+section{padding:2.8rem 0}
+.n{
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:.68rem;font-weight:600;letter-spacing:.14em;
+  color:var(--accent);margin:0 0 .8rem;
+  display:flex;align-items:center;gap:.7rem;
+}
+.n::after{content:"";flex:1;height:1px;background:var(--rule)}
+h2{
+  font-size:clamp(1.4rem,5.4vw,1.72rem);
+  line-height:1.22;font-weight:500;letter-spacing:-.015em;
+  margin:0 0 .45rem;
+}
+.pieza{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.82rem;color:var(--accent);font-weight:600;
+  display:block;margin:0 0 1.1rem;letter-spacing:.01em;
+  overflow-wrap:anywhere;
+}
+
+/* ---------- código ---------- */
+pre{
+  margin:1.5rem 0;
+  background:var(--code-bg);
+  border-radius:8px;
+  border-left:3px solid var(--accent);
+  padding:.95rem 1rem;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+pre code{
+  background:none;padding:0;white-space:pre;
+  font-size:.74rem;line-height:1.7;display:block;color:var(--ink-2);
+}
+pre .c{color:var(--ink-3)}
+pre .k{color:var(--accent)}
+
+/* ---------- dónde se usa ---------- */
+.uso{
+  margin:1.6rem 0 .3rem;
+  background:var(--paper-2);
+  border:1px solid var(--rule);
+  border-radius:10px;
+  padding:.95rem 1.05rem;
+}
+.uso-label{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 .45rem;font-weight:600;
+}
+.uso p{font-size:.93rem;line-height:1.55;color:var(--ink-2);margin:0}
+
+/* ---------- tabla de años ---------- */
+.years{
+  margin:1.7rem 0 1.6rem;
+  border-top:1px solid var(--rule);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+.years .hd,.years .row{
+  display:grid;
+  grid-template-columns:2.5rem 1fr 1fr;
+  gap:.45rem;
+  align-items:baseline;
+  padding:.62rem 0 .55rem;
+  border-bottom:1px solid var(--rule);
+}
+.years .hd{
+  font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);padding-top:.55rem;padding-bottom:.42rem;
+}
+.years .row{font-size:.9rem;color:var(--ink-2)}
+.years .yr{color:var(--ink);font-weight:600}
+.years .r{text-align:right}
+.years .hd .b{display:none}
+.bar{grid-column:1/-1;display:flex;align-items:center;gap:.55rem;margin-top:.4rem}
+.bar i{display:block;height:6px;border-radius:3px;background:var(--accent);opacity:.85}
+.bar b{font-size:.76rem;font-weight:600;color:var(--accent);white-space:nowrap}
+.years .note{
+  border:0;font-size:.77rem;color:var(--ink-3);
+  display:block;padding:.7rem 0 0;line-height:1.5;
+}
+
+/* ---------- flujo ETL animado ---------- */
+.etl{position:relative;margin:1.9rem 0 0;padding-left:1.55rem}
+.etl::before{
+  content:"";position:absolute;left:.44rem;top:.9rem;bottom:.9rem;
+  width:2px;background:var(--rule);border-radius:1px;
+}
+.etl-dot{
+  position:absolute;left:0;width:.95rem;height:.95rem;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 0 5px var(--paper);
+  animation:etlDot 10.5s linear infinite;
+}
+@keyframes etlDot{
+  0%{top:.4rem}
+  100%{top:calc(100% - 1.35rem)}
+}
+.etl ol{list-style:none;margin:0;padding:0}
+.etl li{
+  position:relative;padding:.62rem 0 .62rem .1rem;
+  opacity:.44;
+  animation:etlStep 10.5s ease-in-out infinite;
+  animation-delay:calc(var(--i) * 1.75s);
+}
+@keyframes etlStep{
+  0%{opacity:.44;transform:translateX(0)}
+  4%{opacity:1;transform:translateX(5px)}
+  15%{opacity:1;transform:translateX(5px)}
+  23%{opacity:.66;transform:translateX(0)}
+  100%{opacity:.44;transform:translateX(0)}
+}
+.etl li strong{
+  display:block;font-weight:600;font-size:1.02rem;color:var(--ink);
+  line-height:1.35;
+}
+.etl li span{
+  display:block;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:.83rem;line-height:1.5;color:var(--ink-2);margin-top:.12rem;
+}
+.etl li em{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-style:normal;font-size:.72rem;color:var(--accent);
+  letter-spacing:.03em;display:block;margin-top:.18rem;
+}
+@media (prefers-reduced-motion:reduce){
+  .etl li{opacity:1;animation:none;transform:none}
+  .etl-dot{display:none}
+}
+
+/* ---------- figuras ---------- */
+figure{margin:2.2rem 0 2.4rem}
+figure svg{display:block;width:100%;height:auto;max-width:23rem;margin:0 auto}
+figcaption{
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:.76rem;color:var(--ink-3);text-align:left;
+  margin-top:1rem;line-height:1.6;
+}
+figcaption code{font-size:.95em;background:none;padding:0}
+.d-box{fill:var(--box);stroke:var(--rule)}
+.d-head{fill:var(--box-head);stroke:var(--rule)}
+.d-title{fill:var(--ink);font-weight:600}
+.d-f{fill:var(--ink-2)}
+.d-key{fill:var(--accent);font-weight:600}
+.d-line{stroke:var(--ink-3);fill:none;opacity:.6}
+.d-dot{fill:var(--ink-3);opacity:.6}
+.d-lbl{fill:var(--ink-3)}
+svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+/* ---------- cierre ---------- */
+.cierre{
+  margin:2.5rem 0 .5rem;
+  background:var(--paper-2);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--accent);
+  border-radius:10px;
+  padding:1.4rem 1.25rem 1.15rem;
+}
+.cierre h3{
+  font-size:1.22rem;font-weight:600;line-height:1.3;
+  margin:0 0 .75rem;letter-spacing:-.01em;
+}
+.cierre p{font-size:.99rem;line-height:1.6;color:var(--ink-2);margin:0 0 .9rem}
+.cierre p:last-child{margin-bottom:0}
+.last{border-top:1px solid var(--rule);padding-top:1.9rem;margin-top:2.2rem}
+footer{
+  padding:2.6rem 0 4.5rem;
+  border-top:1px solid var(--rule);
+  margin-top:1rem;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:.79rem;line-height:1.75;color:var(--ink-3);
+}
+footer a{color:var(--ink-2)}
+
+@media (min-width:38rem){
+  body{font-size:1.11rem}
+  .hero{padding:6rem 0 1.5rem}
+  section{padding:3.5rem 0}
+  pre code{font-size:.82rem}
+  .years .hd,.years .row{grid-template-columns:3.2rem 1fr 1fr 8.5rem;gap:1.1rem}
+  .years .hd .b{display:block}
+  .bar{grid-column:4;margin-top:0}
+  figcaption{text-align:center;max-width:26rem;margin-left:auto;margin-right:auto}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header class="hero">
+    <h1>Qué hace cada pieza de SQL, y para qué sirve de verdad.</h1>
+    <p class="punch">Aquí no hay teoría ni ejercicios. Hay un archivo que cualquiera puede descargar gratis, un problema real de un banco, y las seis piezas de SQL que hicieron falta para resolverlo.</p>
+    <p>Cada una está explicada en simple: qué hace, cómo se escribe, para qué sirvió aquí y dónde te la vas a encontrar. No hay nada que instalar ni que ejecutar.</p>
+    <p>Si sabes hacer un <code>SELECT</code> y nunca construiste nada tuyo, esto es el mapa de lo que hay en medio.</p>
+  </header>
+
+  <section>
+    <p class="n">01</p>
+    <h2>Primero se recibe, después se limpia</h2>
+    <span class="pieza">CREATE TABLE</span>
+    <p>Lo primero que se hace con un archivo nuevo no es corregirlo. Es meterlo tal cual, entero, con sus errores incluidos.</p>
+    <p>Se crea una tabla donde todas las columnas son texto —incluso la edad, incluso las fechas— y se vuelca el archivo adentro sin tocar nada:</p>
+    <pre><code><span class="k">CREATE TABLE</span> carga_cruda (
+  edad      varchar(50),
+  mes       varchar(50),
+  resultado varchar(50)
+);</code></pre>
+    <p>¿Por qué texto y no números? Porque si una sola fila trae <code>N/A</code> donde debería ir un número, la carga entera se cae y no te dice cuál fue. Así entra todo, y recién después revisas con calma qué hay adentro.</p>
+    <div class="uso">
+      <p class="uso-label">Dónde se usa</p>
+      <p>Es el primer paso de cualquier carga de datos, en cualquier empresa. Tiene nombre propio: capa de aterrizaje. Recibe, no valida.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="n">02</p>
+    <h2>Convertir muchas filas en un número</h2>
+    <span class="pieza">GROUP BY + COUNT()</span>
+    <p>Una tabla con 41,188 filas no te dice nada si la miras. <code>GROUP BY</code> junta las filas que comparten algo, y <code>COUNT()</code> las cuenta.</p>
+    <pre><code><span class="k">SELECT</span> anio, <span class="k">COUNT</span>(*) <span class="k">AS</span> llamadas
+<span class="k">FROM</span>   llamadas
+<span class="k">GROUP BY</span> anio;</code></pre>
+    <p>Tres líneas. Y 41,188 filas sueltas se convierten en esto:</p>
+
+    <div class="years">
+      <div class="hd">
+        <span>Año</span>
+        <span class="r">Llamadas</span>
+        <span class="r">Aceptaron</span>
+        <span class="b">De cada 100</span>
+      </div>
+      <div class="row">
+        <span class="yr">2008</span>
+        <span class="r">27,690</span>
+        <span class="r">1,339</span>
+        <span class="bar"><i style="width:9.3%"></i><b>5 de 100</b></span>
+      </div>
+      <div class="row">
+        <span class="yr">2009</span>
+        <span class="r">11,440</span>
+        <span class="r">2,228</span>
+        <span class="bar"><i style="width:37.4%"></i><b>19 de 100</b></span>
+      </div>
+      <div class="row">
+        <span class="yr">2010</span>
+        <span class="r">2,058</span>
+        <span class="r">1,073</span>
+        <span class="bar"><i style="width:100%"></i><b>52 de 100</b></span>
+      </div>
+      <span class="note">Un banco vendiendo depósitos a plazo por teléfono, entre mayo de 2008 y noviembre de 2010.</span>
+    </div>
+
+    <p>Llamó a más del 90&nbsp;% menos de gente y la proporción que dijo que sí se multiplicó por diez. Ahí aparece la pregunta que sostiene todo lo demás: <em>¿por qué?</em></p>
+    <div class="uso">
+      <p class="uso-label">Dónde se usa</p>
+      <p>Cada reporte por mes, por región o por producto que hayas visto en tu vida es un <code>GROUP BY</code> por debajo. Es la pieza que convierte datos en una frase que alguien puede leer.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="n">03</p>
+    <h2>Mirar la fila anterior</h2>
+    <span class="pieza">LAG()</span>
+    <p>Ese archivo traía el mes de cada llamada, pero no el año. Y las llamadas cruzaban tres.</p>
+    <p>Las filas venían en orden cronológico. Entonces, si una fila dice «marzo» y la anterior decía «noviembre», el año cambió justo ahí. <code>LAG()</code> hace exactamente eso: te deja ver el valor de la fila anterior.</p>
+    <pre><code><span class="k">SELECT</span> mes,
+       <span class="k">LAG</span>(mes) <span class="k">OVER</span> (<span class="k">ORDER BY</span> linea)
+<span class="k">FROM</span>   carga_cruda;</code></pre>
+    <p>Con esa comparación, repetida fila por fila, se reconstruyó el año de las 41,188 llamadas. El dato no estaba, pero se podía deducir.</p>
+    <div class="uso">
+      <p class="uso-label">Dónde se usa</p>
+      <p>Comparar un mes contra el anterior. Detectar cuándo cambió un precio. Medir cuánto tiempo pasó entre dos cosas. Siempre que una fila necesite saber qué había antes que ella.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="n">04</p>
+    <h2>Juntar dos tablas — y el error más caro</h2>
+    <span class="pieza">JOIN</span>
+    <p>Los datos casi nunca están en una sola tabla. <code>JOIN</code> junta dos por un campo en común:</p>
+    <pre><code><span class="k">JOIN</span> cliente c
+  <span class="k">ON</span> c.id = llamada.id_cliente</code></pre>
+    <p>Se lee así: por cada llamada, tráeme el cliente cuyo id coincide. Es la pieza más usada de SQL. Y también la que esconde el error más caro.</p>
+    <p>Un cliente del archivo recibió 86 llamadas mientras el banco lo tenía en un grupo, y aceptó en 8 de ellas. Después lo reclasificó. Hoy está en otro grupo, donde aceptó 6 veces más.</p>
+    <p>Ese <code>JOIN</code> trae al cliente <strong>como es hoy</strong>. Así que las 14 aceptaciones se anotan enteras en el grupo de hoy, y el grupo que realmente las consiguió desaparece del reporte. Con ese reporte se reparte el presupuesto del año siguiente.</p>
+    <p>La solución es guardar cada versión del cliente con su rango de fechas, y agregarle dos líneas al <code>JOIN</code>:</p>
+    <pre><code><span class="k">JOIN</span> cliente c
+  <span class="k">ON</span> c.id = llamada.id_cliente
+ <span class="k">AND</span> llamada.fecha &gt;= c.desde
+ <span class="k">AND</span> llamada.fecha &lt;  c.hasta</code></pre>
+    <p>Ahora cada llamada se une con la versión que estaba viva ese día. Dos líneas de diferencia entre un reporte que miente y uno que no.</p>
+    <div class="uso">
+      <p class="uso-label">Dónde se usa</p>
+      <p>Precios históricos, tipos de cambio, tarifas, planes contratados. Casi cualquier dato que te importe cambia con el tiempo, y un <code>UPDATE</code> pisa la versión anterior sin dejar rastro.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="n">05</p>
+    <h2>Guardar el proceso, no solo la consulta</h2>
+    <span class="pieza">CREATE PROCEDURE</span>
+    <p>Una consulta la escribes, la ejecutas y se va. Un procedimiento se guarda con nombre adentro de la base, y se vuelve a ejecutar cuando quieras.</p>
+    <pre><code><span class="k">CREATE PROCEDURE</span> cargar_clientes
+<span class="k">AS</span>
+<span class="k">BEGIN</span>
+  <span class="c">-- los pasos, siempre en el mismo orden</span>
+<span class="k">END</span>;</code></pre>
+    <p>Todo este proyecto corre así: se ejecuta uno solo y la carga entera se rehace sola, igual que la vez anterior. Si mañana llega un archivo nuevo, no hay que acordarse de nada.</p>
+    <div class="uso">
+      <p class="uso-label">Dónde se usa</p>
+      <p>Toda carga que se repite: la de cada noche, la de cada cierre de mes. Es la distancia entre «escribí una consulta» y «dejé algo funcionando».</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="n">06</p>
+    <h2>Decir qué es real y qué inventaste</h2>
+    <span class="pieza">-- el comentario, y el nombre de la tabla</span>
+    <p>Esta no es una función ni una palabra reservada, y aun así es la pieza que más cambia las cosas.</p>
+    <p>El archivo no traía ninguna clasificación de clientes, y el proyecto la necesitaba. Así que se inventó. Pero se inventó a la vista:</p>
+    <pre><code><span class="c">-- SIMULADO: no viene del archivo</span>
+<span class="k">CREATE TABLE</span> simulado_CambioSegmento (</code></pre>
+    <p>Nadie necesita leer nada más para saber que ahí no hay que confiar. Del resto: las 41,188 llamadas son reales; el año y la identidad del cliente están deducidos, siguiendo reglas que hubo que elegir.</p>
+    <p>Y el dato incómodo: como la clasificación se repartió al azar, la diferencia entre medir de una forma y de la otra salió chica —0.40 puntos en el caso mayor—. La maquinaria funciona; el número es pequeño porque el dato de entrada es inventado. Decirlo cuesta poco.</p>
+    <div class="uso">
+      <p class="uso-label">Dónde se usa</p>
+      <p>Un nombre honesto y dos líneas de comentario evitan el peor error posible: que alguien tome una decisión con un dato falso creyendo que era verdadero.</p>
+    </div>
+  </section>
+
+  <section class="last">
+    <p class="n">07</p>
+    <h2>Las seis piezas, juntas</h2>
+    <p>Con eso —y nada más que eso— se armó un almacén de datos completo a partir de un archivo público de 41,188 filas.</p>
+    <p>Puestas en fila, las seis piezas son un camino. El dato entra por arriba sucio y sale por abajo listo para responder preguntas, y nunca vuelve atrás:</p>
+
+    <figure>
+      <div class="etl" aria-label="Recorrido del dato: archivo, carga cruda, tablas de origen, staging, dimensiones y hechos, consultas">
+        <span class="etl-dot" aria-hidden="true"></span>
+        <ol>
+          <li style="--i:0">
+            <strong>El archivo</strong>
+            <span>41,188 filas separadas por punto y coma. Tal como se descargan.</span>
+          </li>
+          <li style="--i:1">
+            <strong>Carga cruda</strong>
+            <span>Entra entero, todas las columnas como texto. Nada se corrige todavía.</span>
+            <em>CREATE TABLE</em>
+          </li>
+          <li style="--i:2">
+            <strong>Tablas de origen</strong>
+            <span>Ahora cada fila sabe a qué persona y a qué canal pertenece. Aquí se recuperó el año.</span>
+            <em>LAG()</em>
+          </li>
+          <li style="--i:3">
+            <strong>Copia intermedia</strong>
+            <span>Una copia de trabajo, sin reglas ni candados, para no tocar nunca el original.</span>
+          </li>
+          <li style="--i:4">
+            <strong>El modelo</strong>
+            <span>Una fila por llamada, rodeada de las formas de mirarla. Aquí se guarda la historia de cada cliente.</span>
+            <em>JOIN por rango de fechas</em>
+          </li>
+          <li style="--i:5">
+            <strong>Las respuestas</strong>
+            <span>Por año, por grupo, por canal. Los números del bloque 02 salen de aquí.</span>
+            <em>GROUP BY</em>
+          </li>
+        </ol>
+      </div>
+      <figcaption>Eso es un proceso ETL: extraer, transformar y cargar. Cada paso deja el dato un poco más listo que el anterior. Conectar un tablero encima del último paso sería lo que viene después; no es parte de este proyecto.</figcaption>
+    </figure>
+
+    <p>El archivo se llama <em>Bank Marketing</em>, está en el repositorio abierto de UCI y se descarga gratis en dos minutos. Ningún acceso a datos de una empresa, ningún permiso especial, ninguna base privada.</p>
+
+    <figure>
+      <svg viewBox="0 0 360 618" role="img" aria-label="Diagrama de las cuatro tablas de origen: canal, interaccion, cliente y simulado_CambioSegmento">
+        <g>
+          <rect class="d-box" x="8" y="10" width="152" height="52" rx="5"/>
+          <rect class="d-head" x="8" y="10" width="152" height="21" rx="5"/>
+          <text class="d-title" x="17" y="24.5" font-size="9.5">canal</text>
+          <text class="d-key"  x="17" y="43" font-size="8.5">id_canal</text>
+          <text class="d-f"    x="17" y="56" font-size="8.5">descripcion</text>
+        </g>
+        <g>
+          <rect class="d-box" x="8" y="96" width="180" height="176" rx="5"/>
+          <rect class="d-head" x="8" y="96" width="180" height="21" rx="5"/>
+          <text class="d-title" x="17" y="110.5" font-size="9.5">interaccion</text>
+          <text class="d-key" x="17" y="129" font-size="8.5">id_interaccion</text>
+          <text class="d-f"   x="17" y="143" font-size="8.5">duracion</text>
+          <text class="d-f"   x="17" y="157" font-size="8.5">campania</text>
+          <text class="d-f"   x="17" y="171" font-size="8.5">dias_ultimo_contacto</text>
+          <text class="d-f"   x="17" y="185" font-size="8.5">anterior_campania</text>
+          <text class="d-f"   x="17" y="199" font-size="8.5">resultado_anterior</text>
+          <text class="d-f"   x="17" y="213" font-size="8.5">fecha_contacto</text>
+          <text class="d-key" x="17" y="227" font-size="8.5">id_cliente</text>
+          <text class="d-key" x="17" y="241" font-size="8.5">id_canal</text>
+          <text class="d-f"   x="17" y="255" font-size="8.5">resultado</text>
+        </g>
+        <g>
+          <rect class="d-box" x="178" y="306" width="174" height="176" rx="5"/>
+          <rect class="d-head" x="178" y="306" width="174" height="21" rx="5"/>
+          <text class="d-title" x="187" y="320.5" font-size="9.5">cliente</text>
+          <text class="d-key" x="187" y="339" font-size="8.5">id_cliente</text>
+          <text class="d-f"   x="187" y="353" font-size="8.5">edad</text>
+          <text class="d-f"   x="187" y="367" font-size="8.5">trabajo</text>
+          <text class="d-f"   x="187" y="381" font-size="8.5">estadocivil</text>
+          <text class="d-f"   x="187" y="395" font-size="8.5">educacion</text>
+          <text class="d-f"   x="187" y="409" font-size="8.5">hipotecado</text>
+          <text class="d-f"   x="187" y="423" font-size="8.5">mora</text>
+          <text class="d-f"   x="187" y="437" font-size="8.5">p_personal</text>
+          <text class="d-f"   x="187" y="451" font-size="8.5">segmento</text>
+          <text class="d-f"   x="187" y="465" font-size="8.5">fecha_actualizacion</text>
+        </g>
+        <g>
+          <rect class="d-box" x="8" y="524" width="204" height="80" rx="5"/>
+          <rect class="d-head" x="8" y="524" width="204" height="21" rx="5"/>
+          <text class="d-title" x="17" y="538.5" font-size="9.5">simulado_CambioSegmento</text>
+          <text class="d-key" x="17" y="557" font-size="8.5">id_cambio</text>
+          <text class="d-key" x="17" y="571" font-size="8.5">id_cliente</text>
+          <text class="d-f"   x="17" y="585" font-size="8.5">segmento</text>
+          <text class="d-f"   x="17" y="599" font-size="8.5">fecha_cambio</text>
+        </g>
+        <path class="d-line" d="M40 62 V96"/>
+        <circle class="d-dot" cx="40" cy="62" r="2"/><circle class="d-dot" cx="40" cy="96" r="2"/>
+        <text class="d-lbl" x="46" y="83" font-size="7">id_canal</text>
+        <path class="d-line" d="M98 272 V290 H265 V306"/>
+        <circle class="d-dot" cx="98" cy="272" r="2"/><circle class="d-dot" cx="265" cy="306" r="2"/>
+        <text class="d-lbl" x="104" y="287" font-size="7">id_cliente</text>
+        <path class="d-line" d="M265 482 V503 H58 V524"/>
+        <circle class="d-dot" cx="265" cy="482" r="2"/><circle class="d-dot" cx="58" cy="524" r="2"/>
+        <text class="d-lbl" x="64" y="500" font-size="7">id_cliente</text>
+      </svg>
+      <figcaption>Las tablas donde entran los datos. Cada llamada apunta a una persona y a un canal. La de abajo, la del prefijo <code>simulado_</code>, es la del bloque 06.</figcaption>
+    </figure>
+
+    <figure>
+      <svg viewBox="0 0 360 600" role="img" aria-label="Modelo en estrella: la tabla de hechos FactInteraccionCliente rodeada de DimTiempo, DimCanal, DimCliente y DimHistorialPrevio">
+        <g>
+          <rect class="d-box" x="8" y="8" width="160" height="120" rx="5"/>
+          <rect class="d-head" x="8" y="8" width="160" height="21" rx="5"/>
+          <text class="d-title" x="17" y="22.5" font-size="9.5">DimTiempo</text>
+          <text class="d-key" x="17" y="41" font-size="8.5">sk_fecha</text>
+          <text class="d-f"   x="17" y="54" font-size="8.5">fecha</text>
+          <text class="d-f"   x="17" y="67" font-size="8.5">anio</text>
+          <text class="d-f"   x="17" y="80" font-size="8.5">mes</text>
+          <text class="d-f"   x="17" y="93" font-size="8.5">nombre_mes</text>
+          <text class="d-f"   x="17" y="106" font-size="8.5">trimestre</text>
+          <text class="d-f"   x="17" y="119" font-size="8.5">anio_mes</text>
+        </g>
+        <g>
+          <rect class="d-box" x="192" y="8" width="160" height="68" rx="5"/>
+          <rect class="d-head" x="192" y="8" width="160" height="21" rx="5"/>
+          <text class="d-title" x="201" y="22.5" font-size="9.5">DimCanal</text>
+          <text class="d-key" x="201" y="41" font-size="8.5">sk_canal</text>
+          <text class="d-f"   x="201" y="54" font-size="8.5">id_canal</text>
+          <text class="d-f"   x="201" y="67" font-size="8.5">descripcion</text>
+        </g>
+        <g>
+          <rect class="d-box" x="36" y="176" width="288" height="152" rx="5"/>
+          <rect class="d-head" x="36" y="176" width="288" height="23" rx="5"/>
+          <text class="d-title" x="46" y="191.5" font-size="10">FactInteraccionCliente</text>
+          <text class="d-key" x="46" y="211" font-size="8.5">sk_interaccion</text>
+          <text class="d-f"   x="46" y="224" font-size="8.5">id_interaccion</text>
+          <text class="d-key" x="46" y="237" font-size="8.5">sk_cliente</text>
+          <text class="d-key" x="46" y="250" font-size="8.5">sk_canal</text>
+          <text class="d-key" x="46" y="263" font-size="8.5">sk_fecha</text>
+          <text class="d-key" x="46" y="276" font-size="8.5">sk_historial</text>
+          <text class="d-f"   x="46" y="289" font-size="8.5">duracion_segundos</text>
+          <text class="d-f"   x="46" y="302" font-size="8.5">numero_contactos</text>
+          <text class="d-f"   x="46" y="315" font-size="8.5">flag_conversion</text>
+        </g>
+        <g>
+          <rect class="d-box" x="8" y="376" width="168" height="198" rx="5"/>
+          <rect class="d-head" x="8" y="376" width="168" height="21" rx="5"/>
+          <text class="d-title" x="17" y="390.5" font-size="9.5">DimCliente</text>
+          <text class="d-key" x="17" y="409" font-size="8.5">sk_cliente</text>
+          <text class="d-f"   x="17" y="422" font-size="8.5">id_cliente</text>
+          <text class="d-f"   x="17" y="435" font-size="8.5">edad</text>
+          <text class="d-f"   x="17" y="448" font-size="8.5">trabajo</text>
+          <text class="d-f"   x="17" y="461" font-size="8.5">estadocivil</text>
+          <text class="d-f"   x="17" y="474" font-size="8.5">educacion</text>
+          <text class="d-f"   x="17" y="487" font-size="8.5">hipotecado</text>
+          <text class="d-f"   x="17" y="500" font-size="8.5">mora</text>
+          <text class="d-f"   x="17" y="513" font-size="8.5">p_personal</text>
+          <text class="d-f"   x="17" y="526" font-size="8.5">segmento</text>
+          <text class="d-key" x="17" y="539" font-size="8.5">fecha_inicio_vigencia</text>
+          <text class="d-key" x="17" y="552" font-size="8.5">fecha_fin_vigencia</text>
+          <text class="d-key" x="17" y="565" font-size="8.5">flag_vigente</text>
+        </g>
+        <g>
+          <rect class="d-box" x="190" y="376" width="162" height="94" rx="5"/>
+          <rect class="d-head" x="190" y="376" width="162" height="21" rx="5"/>
+          <text class="d-title" x="199" y="390.5" font-size="9.5">DimHistorialPrevio</text>
+          <text class="d-key" x="199" y="409" font-size="8.5">sk_historial</text>
+          <text class="d-f"   x="199" y="422" font-size="8.5">resultado_anterior</text>
+          <text class="d-f"   x="199" y="435" font-size="8.5">contactos_previos</text>
+          <text class="d-f"   x="199" y="448" font-size="8.5">rango_dias</text>
+          <text class="d-f"   x="199" y="461" font-size="8.5">es_cliente_nuevo</text>
+        </g>
+        <path class="d-line" d="M88 128 V176"/>
+        <circle class="d-dot" cx="88" cy="128" r="2"/><circle class="d-dot" cx="88" cy="176" r="2"/>
+        <path class="d-line" d="M272 76 V176"/>
+        <circle class="d-dot" cx="272" cy="76" r="2"/><circle class="d-dot" cx="272" cy="176" r="2"/>
+        <path class="d-line" d="M92 328 V376"/>
+        <circle class="d-dot" cx="92" cy="328" r="2"/><circle class="d-dot" cx="92" cy="376" r="2"/>
+        <path class="d-line" d="M271 328 V376"/>
+        <circle class="d-dot" cx="271" cy="328" r="2"/><circle class="d-dot" cx="271" cy="376" r="2"/>
+      </svg>
+      <figcaption>El modelo terminado. En el centro, una fila por llamada; alrededor, las cuatro formas de mirarla. Las tres últimas líneas de <code>DimCliente</code> son las del bloque 04: desde cuándo y hasta cuándo valió cada versión.</figcaption>
+    </figure>
+
+    <p>Además de lo que se ve arriba, el proyecto tiene las comprobaciones que confirman que no se perdió ni se duplicó ninguna de las 41,188 filas, y cinco consultas que responden la pregunta del bloque 02 desde distintos ángulos: por grupo, por canal, por mes y por historial de campañas anteriores.</p>
+
+    <div class="cierre">
+      <h3>Ahora el tuyo</h3>
+      <p>El primer paso no es escribir SQL. Es abrir cualquier archivo público que te interese de verdad —hay miles, y son gratis— y escribir la lista de lo que le falta para responder una pregunta. Esa lista es tu proyecto.</p>
+      <p>No va a ser fácil ni rápido, pero va por partes: cargar el archivo tal como viene, decidir qué significa cada columna, después una cosa más. Ninguna de esas partes, sola, es difícil.</p>
+      <p>La única que no puedes saltarte es la primera.</p>
+    </div>
+  </section>
+
+  <footer>
+    Klismann Saavedra<br>
+    Proyecto hecho en SQL Server sobre el Bank Marketing Data Set, del repositorio abierto de la Universidad de California, Irvine.
+  </footer>
+
+</main>
+</body>
+</html>
